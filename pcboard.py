@@ -82,7 +82,7 @@ def getHoles(fileName, xSize=0.0):
         l = l.strip()
         if l.startswith("%"):
             break
-        m = re.search("^T(\d+)C(\d\.\d+)", l)
+        m = re.search(r"^T(\d+)C(\d\.\d+)", l)
         if m != None:
             try:
                 tool[int(m.group(1))] = float(m.group(2))
@@ -94,7 +94,7 @@ def getHoles(fileName, xSize=0.0):
 
     for l in f:
         l = l.strip()
-        m = re.search("^T(\d+)", l)
+        m = re.search(r"^T(\d+)", l)
         if m != None:
             try:
                 # print(m.group(1))
@@ -110,7 +110,7 @@ def getHoles(fileName, xSize=0.0):
                 pass
             continue
 
-        m = re.search("^X([\+-][\d]+)Y([\+-][\d]+)", l)
+        m = re.search(r"^X([\+-][\d]+)Y([\+-][\d]+)", l)
         if m != None:
             try:
                 x = float(m.group(1)) / 10000.0
@@ -238,8 +238,8 @@ class MainFrame(wx.Frame):
 
         self.sizerV.Fit(self)
 
-        dw, dh = wx.DisplaySize()
-        w, h = self.GetSize()
+        dw, _ = wx.DisplaySize()
+        w, _ = self.GetSize()
         self.SetPosition((dw - w, 0))
 
         self.tmpPath = ""
@@ -251,7 +251,7 @@ class MainFrame(wx.Frame):
         for line in f:
             line = line.strip()
             print(line)
-            m = re.match("^([XY])([\d]+)([XY]*)([\d]*)", line)
+            m = re.match(r"^([XY])([\d]+)([XY]*)([\d]*)", line)
             if m != None:
                 # print("(%s) (%s) (%s) (%s)" % \
                 #       ( m.group(1), m.group(2), m.group(3), m.group(4)))
@@ -302,10 +302,10 @@ class MainFrame(wx.Frame):
                 self.yPoints += 1
             if not probing:
                 # self.probe('t')
-                result = self.drill(self.path)
+                _ = self.drill(self.path)
             else:
                 probeOptions = ["-p %d:%d -h" % (self.xPoints, self.yPoints), ]
-                result = self.drill(self.path, options=probeOptions)
+                _ = self.drill(self.path, options=probeOptions)
 
             drill = self.project + "1.ngc"
             self.drillPath = os.path.join(self.dirname, drill)
@@ -361,7 +361,7 @@ class MainFrame(wx.Frame):
             else:
                 y = y1
                 j = self.yPoints - 1
-            for k in range(self.yPoints):
+            for _ in range(self.yPoints):
                 if holes == None:
                     prb.write("g0 x%6.4f y%6.4f (%d %d x%6.4f y %6.4f)\n" % \
                               (x, y, i, j, x, y))
@@ -400,7 +400,7 @@ class MainFrame(wx.Frame):
         prb.write("(PROBECLOSE %s.prb)\n" % (self.project))
         prb.write("g0 z1.5\n")
         prb.write("g0 x%5.3f y%5.3f\n" % (0.0, 0.0))
-        prb.write("m2	(end of program)\n");
+        prb.write("m2	(end of program)\n")
         prb.close()
 
     def OnLevelTop(self, e):
@@ -413,7 +413,7 @@ class MainFrame(wx.Frame):
             except IOError:
                 print("error connot find %s" % (inputFile))
                 return
-        result = self.gdraw(self.top, "", "--probe=" + probeFile)
+        _ = self.gdraw(self.top, "", "--probe=" + probeFile)
 
     def drillFix(self, drillPath, val):
         out = open(self.tmpPath, "w")
@@ -493,7 +493,7 @@ class MainFrame(wx.Frame):
             except IOError:
                 print("error connot find %s" % (inputFile))
                 return
-        result = self.gdraw(self.bottom, self.finalSize, "--probe=" + probeFile)
+        _ = self.gdraw(self.bottom, self.finalSize, "--probe=" + probeFile)
         self.drillFix(self.drillPath, self.finalSize)
         if linux:
             nullDev = open("/dev/null", "w")
