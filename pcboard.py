@@ -16,8 +16,8 @@ from math import floor, hypot, sqrt
 linux = platform.system() == 'Linux'
 
 if linux:
-    gdraw = "/home/eric/java/GDraw.jar"
-    drill = "/home/eric/java/Drill.jar"
+    gdraw = "/home/eric/java/GDraw/dist/GDraw.jar"
+    drill = "/home/eric/java/Drill/dist/Drill.jar"
     ncFiles = '/home/eric/linuxcnc/nc_files/'
     probeInput = '/home/eric/linuxcnc/configs/cncmill/'
 else:
@@ -396,7 +396,7 @@ class MainFrame(wx.Frame):
                 shutil.move(inputFile, probeFile)
             except IOError:
                 print("error connot find %s" % (inputFile))
-                return
+                #return
         _ = self.gdraw(self.top, "", "--probe=" + probeFile)
 
     def drillFix(self, drillPath, val):
