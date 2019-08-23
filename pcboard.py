@@ -1,8 +1,9 @@
-#!/cygdrive/c/Python27/python
+#!/cygdrive/c/Python37/python
 #!/usr/local/bin/python2.7
 
 import wx
 import os
+import sys
 from sys import stdout
 import subprocess
 import re
@@ -13,33 +14,6 @@ from operator import attrgetter
 from math import floor, hypot, sqrt
 
 linux = platform.system() == 'Linux'
-
-flipX = True
-if flipX:
-    flipAxis = 'X'
-else:
-    flipAxis = 'Y'
-
-probing = True
-probeGrid = 0.5
-minPoints = 1
-remove = False
-
-drillDefaults = (("depth", "-0.095"),
-                 ("retract", "0.030"),
-                 ("safeZ", "1.000"),
-                 ("feed", "7.0"),
-                 ("change", "1.5"),
-                 ("probeRetrct", "0.020"),
-                 ("probeDepth", "-0.010"))
-
-gDrawDefaults = (
-    # ("v", ),
-    # ("D", ),
-    ("depth", "-0.0070"),
-    ("retract", "0.020"),
-    ("linearFeed", "14.0"),
-    ("circularFeed", "14.0"))
 
 if linux:
     gdraw = "/home/eric/java/GDraw.jar"
@@ -244,29 +218,39 @@ class MainFrame(wx.Frame):
 
         self.tmpPath = ""
 
-    def getBoardSize(self, path):
+    def getBoardSize(self, path, dbg=False):
         self.xSize = 0
         self.ySize = 0
         f = open(path, "r")
+        print(path)
         for line in f:
             line = line.strip()
-            print(line)
-            m = re.match(r"^([XY])([\d]+)([XY]*)([\d]*)", line)
+            if dbg:
+                print(line)
+                stdout.flush()
+            m = re.match(r"^([XY])([-\d]+)([XY]*)([-\d]*)", line)
             if m != None:
-                # print("(%s) (%s) (%s) (%s)" % \
-                #       ( m.group(1), m.group(2), m.group(3), m.group(4)))
-                # stdout.flush()
+                if dbg:
+                    print("(%s) (%s) (%s) (%s)" % \
+                          ( m.group(1), m.group(2), m.group(3), m.group(4)))
+                    stdout.flush()
                 for i in range(1, 4, 2):
                     if len(m.group(i)) != 0:
                         axis = m.group(i)
-                        val = int(m.group(i + 1)) / 1000000.0
+                        if not kiCad:
+                            val = int(m.group(i + 1)) / 1000000.0
+                        else:
+                            val = int(m.group(i + 1)) / 25400000.0
+                        if dbg:
+                            print("axis %s val %s %7.4f" % \
+                                  (axis, m.group(i + 1), val))
                         if axis == "X":
                             if val > self.xSize:
                                 self.xSize = val
                         else:
                             if val > self.ySize:
                                 self.ySize = val
-        # print("xSize %7.4f ySize %7.4f" % (self.xSize, self.ySize))
+        print("xSize %7.4f ySize %7.4f" % (self.xSize, self.ySize))
 
     def OnSelect(self, e):
         self.dirname = ncFiles
@@ -516,7 +500,7 @@ class MainFrame(wx.Frame):
             print(str)
         stdout.flush()
         try:
-            result = subprocess.check_output(command)
+            result = subprocess.check_output(command).decode("utf-8")
             print(result)
             stdout.flush()
             return(result)
@@ -549,7 +533,7 @@ class MainFrame(wx.Frame):
             print(str)
         stdout.flush()
         try:
-            result = subprocess.check_output(command)
+            result = subprocess.check_output(command).decode("utf-8")
             print(result)
             stdout.flush()
             return(result)
@@ -569,6 +553,86 @@ class MainFrame(wx.Frame):
         # else:
         #     result = subprocess.check_output(["java", "-jar", gdraw, fileName])
         #     return result
+
+def parseCmdLine():
+    n = 1
+    inFile = None
+    argLen = len(sys.argv)
+    while True:
+        if n >= argLen:
+            break
+        val = sys.argv[n]
+        if val.startswith('--'):
+            if len(val) >= 3:
+                tmp = val[2:]
+                if tmp == 'help':
+                    help()
+        elif val.startswith('-'):
+            if len(val) >= 2:
+                tmp = val[1]
+                if tmp == "k":
+                    kiCad = True
+                elif tmp == 'c':
+                    n += 1
+                    if n < argLen:
+                        arg = int(sys.argv[n])
+                        if arg == 0:
+                            cutLines = False
+                        else:
+                            cutLines = True
+                    else:
+                        cutLines = True
+        elif val.startswith('?'):
+            help()
+        else:
+            pass
+        n += 1
+
+def help(self):
+    print("Usage: pcboard [options] ")
+    print(" ?            help\n" \
+          " -h           help\n" \
+    )
+    sys.exit()
+        
+kiCad = True
+cutLines = False
+flipX = True
+
+parseCmdLine()
+
+if flipX:
+    flipAxis = 'X'
+else:
+    flipAxis = 'Y'
+
+probing = True
+probeGrid = 0.5
+minPoints = 1
+remove = False
+
+drillDefaults = (("depth", "-0.095"),
+                 ("retract", "0.030"),
+                 ("safeZ", "1.000"),
+                 ("feed", "7.0"),
+                 ("change", "1.5"),
+                 ("probeRetrct", "0.020"),
+                 ("probeDepth", "-0.010"))
+
+gDrawDefaults = (
+    # ("v", ),
+    # ("D", ),
+    ("depth", "-0.0070"),
+    ("retract", "0.020"),
+    ("linearFeed", "14.0"),
+    ("circularFeed", "14.0"))
+
+if kiCad:
+    gDrawDefaults += ("M", )
+    drillDefaults += ("M", )
+
+if not cutLines:
+    gDrawDefaults += ("t 0", )
 
 app = wx.App()
 
