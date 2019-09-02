@@ -528,7 +528,7 @@ class MainFrame(wx.Frame):
             if len(d) == 2:
                 command.append("--%s=%s" % d)
             else:
-                command.append("-" + d[0])
+                command.append("-" + d)
         for str in command:
             print(str)
         stdout.flush()
@@ -555,6 +555,7 @@ class MainFrame(wx.Frame):
         #     return result
 
 def parseCmdLine():
+    global kiCad, cutLines
     n = 1
     inFile = None
     argLen = len(sys.argv)
