@@ -16,13 +16,25 @@ from math import floor, hypot, sqrt
 linux = platform.system() == 'Linux'
 
 if linux:
-    gdraw = "/home/eric/java/GDraw/dist/GDraw.jar"
-    drill = "/home/eric/java/Drill/dist/Drill.jar"
+    gdraw = [\
+            "java",\
+             "-cp",\
+             "/home/eric/java/CNC/dist/CNC.jar:"\
+             "/home/eric/java/GDraw/dist/GDraw.jar",\
+             "gdraw.Main"
+             ]
+    drill = [\
+            "java",\
+             "-cp",\
+             "/home/eric/java/CNC/dist/CNC.jar:"\
+             "/home/eric/java/Drill/dist/Drill.jar",\
+             "drill.Main"
+             ]
     ncFiles = '/home/eric/linuxcnc/nc_files/'
     probeInput = '/home/eric/linuxcnc/configs/cncmill/'
 else:
-    gdraw = "c:\\development\\java\\gdraw\\dist\\GDraw.jar"
-    drill = "c:\\development\\java\\drill\\dist\\Drill.jar"
+    gdraw = ["java", "-jar", "c:\\development\\java\\gdraw\\dist\\GDraw.jar"]
+    drill = ["java", "-jar", "c:\\development\\java\\drill\\dist\\Drill.jar"]
     ncFiles = './'
     probeInput = './'
 
@@ -484,7 +496,7 @@ class MainFrame(wx.Frame):
             subprocess.Popen(['/usr/bin/eog', ncFiles], stderr=nullDev)
 
     def drill(self, fileName, size=0.0, options=None):
-        command = ["java", "-jar", drill]
+        command = drill
         command.append("-" + flipAxis.lower())
         if size != 0.0:
             command.append("%5.3f" % (size))
@@ -517,7 +529,7 @@ class MainFrame(wx.Frame):
         # return result
 
     def gdraw(self, fileName, offset, probe=None):
-        command = ["java", "-jar", gdraw]
+        command = gdraw
         if len(offset) != 0:
             command.append("-" + flipAxis.lower())
             command.append(offset)
@@ -596,8 +608,8 @@ def help(self):
     )
     sys.exit()
         
-kiCad = True
-cutLines = False
+kiCad = False
+cutLines = True
 flipX = True
 
 parseCmdLine()
@@ -633,7 +645,8 @@ if kiCad:
     drillDefaults += ("M", )
 
 if not cutLines:
-    gDrawDefaults += ("t 0", )
+    gDrawDefaults += ("t=0", )
+print(gDrawDefaults)
 
 app = wx.App()
 
